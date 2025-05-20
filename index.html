@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz: Immunbiologie</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: Arial, sans-serif;
+  background-color: #e0f7fa;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  min-height: 100vh;
+}
+
+.container {
+  width: 95%;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  min-height: 90vh;
+  height: auto;          
+}
+
+    h2 {
+      color: #004d40;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .frage {
+      flex: 1;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .antworten {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+    }
+    .antworten button {
+      margin: 8px 0;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+      background-color: #4dd0e1;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .antworten button:hover {
+      background-color: #00bcd4;
+    }
+    .antworten button.correct {
+      background-color: #66bb6a;
+    }
+    .antworten button.wrong {
+      background-color: #ef5350;
+    }
+    .navigation {
+      display: none;
+      margin-top: 20px;
+      justify-content: center;
+      gap: 20px; /* Abstand zwischen den Buttons */
+    }
+    .navigation button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background-color: #004d40;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .navigation button:hover {
+      background-color: #00332b;
+    }
+    .ergebnis {
+  display: none;
+  text-align: left;
+  font-size: 18px;
+  color: #004d40;
+  margin-top: 20px;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+.ergebnis ul {
+  padding-left: 20px;
+}
+.ergebnis li {
+  margin-bottom: 10px;
+}
+    .level-auswahl {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px; /* Nach oben verschieben */
+    }
+    .level-auswahl button {
+      margin: 10px;
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      background-color: #00796b;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .level-auswahl button:hover {
+      background-color: #004d40;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Quiz: Immunbiologie</h2>
+    <div class="level-auswahl" id="level-auswahl">
+      <button onclick="startQuiz('leicht')">Leicht</button>
+      <button onclick="startQuiz('mittel')">Mittel</button>
+      <button onclick="startQuiz('schwer')">Schwer</button>
+    </div>
+    <div class="frage" id="frage" style="display: none;"></div>
+    <div class="antworten" id="antworten" style="display: none;"></div>
+    <div class="ergebnis" id="ergebnis"></div>
+    <div class="navigation" id="navigation">
+      <button onclick="restart()">Wiederholen</button>
+      <button onclick="Levels()">Levels</button>
+    </div>
+  </div>
+  <script>
+    let wrongAnswers = [];
+
+    const allQuestions = [
+    { question: "Welche Zellen sind Teil des Immunsystems?", answers: ["Erythrozyten", "Thrombozyten", "Leukozyten", "Hepatozyten"], correct: 2, level: "leicht" },
+    { question: "Wofür sind Antikörper zuständig?", answers: ["Sauerstofftransport", "Abwehr von Krankheitserregern", "Blutgerinnung", "Verdauung"], correct: 1, level: "leicht" },
+    { question: "Was ist ein Antigen?", answers: ["Ein Abwehrstoff", "Ein Virus", "Ein körperfremdes Molekül, das eine Immunantwort auslöst", "Ein Blutbestandteil"], correct: 2, level: "leicht" },
+    { question: "Welche Art von Immunität erlangt man durch Impfung?", answers: ["Angeborene Immunität", "Passive Immunität", "Erworbene Immunität", "Unspezifische Abwehr"], correct: 2, level: "leicht" },
+    { question: "Welche Organe gehören zum lymphatischen System?", answers: ["Leber und Niere", "Milz und Thymus", "Magen und Darm", "Lunge und Herz"], correct: 1, level: "leicht" },
+    { question: "Was passiert bei einer Entzündung?", answers: ["Die Körpertemperatur sinkt", "Das Gewebe wird kälter", "Das Immunsystem reagiert auf eine Schädigung oder Infektion", "Das Blut wird verdünnt"], correct: 2, level: "leicht" },
+    { question: "Was ist die Hauptaufgabe der T-Helferzellen?", answers: ["Zerstörung von Krankheitserregern", "Aktivierung anderer Immunzellen", "Produktion von Antikörpern", "Blutgerinnung"], correct: 1, level: "leicht" },
+    { question: "Welche Zellen produzieren Antikörper?", answers: ["T-Zellen", "Makrophagen", "Plasmazellen", "Granulozyten"], correct: 2, level: "leicht" },
+    { question: "Was versteht man unter 'Immunantwort'?", answers: ["Verdauungsvorgang", "Reaktion des Körpers auf Blutverlust", "Reaktion des Immunsystems auf Krankheitserreger", "Atmungsreaktion"], correct: 2, level: "leicht" },
+    { question: "Welche Immunzellen 'fressen' Krankheitserreger?", answers: ["Erythrozyten", "Makrophagen", "T-Zellen", "Plasmazellen"], correct: 1, level: "leicht" },
+    { question: "Wofür steht die Abkürzung 'Ig' bei Antikörpern?", answers: ["Immunglobulin", "Immungranulat", "Ionen-Gehalt", "Infektionsgrad"], correct: 0, level: "leicht" },
+    { question: "Wie nennt man die Immunität, die von Geburt an vorhanden ist?", answers: ["Erworbene Immunität", "Passive Immunität", "Angeborene Immunität", "Adaptive Immunität"], correct: 2, level: "leicht" },
+    { question: "Was passiert im Thymus?", answers: ["Bildung von Blut", "Reifung der T-Zellen", "Abbau alter Zellen", "Produktion von Hormonen"], correct: 1, level: "leicht" },
+    { question: "Welche Immunzellen bekämpfen virusinfizierte Zellen?", answers: ["B-Zellen", "Plasmazellen", "Zytotoxische T-Zellen", "Neutrophile Granulozyten"], correct: 2, level: "leicht" },
+    { question: "Was ist die Funktion der Milz im Immunsystem?", answers: ["Bildung von Antikörpern", "Filterung des Blutes und Abbau alter Blutzellen", "Produktion von Hormonen", "Verdauung von Fetten"], correct: 1, level: "leicht" },
+    { question: "Was versteht man unter einem Impfstoff?", answers: ["Ein Medikament gegen Fieber", "Ein Stoff zur Blutverdünnung", "Ein Mittel zur Anregung einer Immunantwort", "Ein Stoff zur Muskelentspannung"], correct: 2, level: "leicht" },
+    { question: "Welche Zellen gehören zur unspezifischen Abwehr?", answers: ["Plasmazellen", "T-Helferzellen", "Makrophagen", "B-Zellen"], correct: 2, level: "leicht" },
+    { question: "Was ist eine Autoimmunerkrankung?", answers: ["Eine Krankheit, die durch Impfungen entsteht", "Eine Erkrankung durch Viren", "Eine Überreaktion gegen harmlose Stoffe", "Eine Erkrankung, bei der das Immunsystem körpereigenes Gewebe angreift"], correct: 3, level: "leicht" },
+    { question: "Welche Immunzellen entwickeln ein 'Gedächtnis'?", answers: ["Makrophagen", "Plasmazellen", "Gedächtnis-T- und B-Zellen", "Granulozyten"], correct: 2, level: "leicht" },
+    { question: "Welche Rolle spielt das Knochenmark im Immunsystem?", answers: ["Es produziert rote Blutkörperchen", "Es filtert Krankheitserreger", "Es ist Reifungsort für Immunzellen", "Es produziert Verdauungsenzyme"], correct: 2, level: "leicht" },
+    { question: "Welche Antikörperklasse wird als erste bei einer Infektion gebildet?", answers: ["IgA", "IgE", "IgG", "IgM"], correct: 3, level: "leicht" },
+    { question: "Wie gelangen Lymphozyten zu den Lymphknoten?", answers: ["Über Blutbahnen", "Durch Schweißdrüsen", "Über Lymphgefäße", "Über das Rückenmark"], correct: 2, level: "leicht" },
+    { question: "Was versteht man unter 'Immunität'?", answers: ["Ein Medikament", "Ein Virus", "Die Fähigkeit, Krankheitserreger abzuwehren", "Ein Symptom"], correct: 2, level: "leicht" },
+    { question: "Was bewirkt eine Allergie?", answers: ["Das Immunsystem reagiert gar nicht", "Das Immunsystem reagiert übermäßig auf harmlose Stoffe", "Die Haut wird unempfindlicher", "Die Immunzellen vermehren sich nicht"], correct: 1, level: "leicht" },
+    { question: "Was ist ein Lymphknoten?", answers: ["Ein Nervenknoten", "Ein Ort zur Immunzellaktivierung", "Ein Knochen", "Ein Muskelfaserbündel"], correct: 1, level: "leicht" },
+    { question: "Was erkennt ein Antikörper?", answers: ["Enzyme", "DNA", "Antigene", "Rote Blutkörperchen"], correct: 2, level: "leicht" },
+    { question: "Was ist ein Virus?", answers: ["Eine bakterielle Zelle", "Ein eigenständiger Organismus", "Ein Krankheitserreger ohne eigenen Stoffwechsel", "Ein Teil des Blutes"], correct: 2, level: "leicht" },
+    { question: "Was ist der Unterschied zwischen spezifischer und unspezifischer Abwehr?", answers: ["Es gibt keinen", "Spezifisch wirkt immer zuerst", "Unspezifisch reagiert allgemein, spezifisch gezielt", "Spezifisch betrifft nur die Haut"], correct: 2, level: "leicht" },
+    { question: "Was versteht man unter einem Antikörpertest?", answers: ["Ein Test auf Blutgerinnung", "Ein Test auf Cholesterin", "Ein Nachweis von Antikörpern im Blut", "Ein Sehtest"], correct: 2, level: "leicht" },
+    { question: "Was bedeutet 'Immunreaktion'?", answers: ["Das Atmen bei Sport", "Die Verdauung von Viren", "Die Reaktion des Körpers auf Erreger", "Ein Symptom der Verdauung"], correct: 2, level: "leicht" },
+    { question: "Was gehört zur ersten Verteidigungslinie des Körpers?", answers: ["T-Zellen", "Antikörper", "Haut und Schleimhäute", "Erythrozyten"], correct: 2, level: "leicht" },
+    { question: "Was ist eine Impfung?", answers: ["Eine Infektion", "Eine künstlich ausgelöste Immunreaktion", "Ein Bluttest", "Eine Allergieauslösung"], correct: 1, level: "leicht" },
+    { question: "Welche Aufgabe hat ein Fieber bei Infektionen?", answers: ["Blutdruckerhöhung", "Schwächung der Immunzellen", "Erschwerung der Vermehrung von Erregern", "Erhöhung der Sauerstoffbindung"], correct: 2, level: "leicht" },
+    { question: "Was sind Pathogene?", answers: ["Nährstoffe", "Fremdkörper", "Krankheitserreger", "Körperzellen"], correct: 2, level: "leicht" },
+    { question: "Was ist die Hauptaufgabe der B-Zellen?", answers: ["Phagozytose", "Antikörperproduktion", "Zellatmung", "Kollagenaufbau"], correct: 1, level: "leicht" },
+    { question: "Welche Antikörperklasse kommt am häufigsten im Blut vor?", answers: ["IgA", "IgM", "IgG", "IgE"], correct: 2, level: "leicht" },
+    { question: "Welche Art von Immunität wird durch die Muttermilch übertragen?", answers: ["Erworbene aktive", "Angeborene", "Passive", "Autoimmun"], correct: 2, level: "leicht" },
+    { question: "Was ist die Hauptfunktion von Neutrophilen Granulozyten?", answers: ["Produktion von Hormonen", "Phagozytose von Bakterien", "Antikörperbildung", "Sauerstofftransport"], correct: 1, level: "leicht" },
+    { question: "Was bedeutet 'unspezifische Abwehr'?", answers: ["Abwehr nur bestimmter Erreger", "Sofortige allgemeine Reaktion auf Erreger", "Gezielte Reaktion auf bekannte Erreger", "Reaktion des Nervensystems"], correct: 1, level: "leicht" },
+    { question: "Welche Immunzellen erkennen fremde Antigene an MHC-Molekülen?", answers: ["B-Zellen", "Plasmazellen", "T-Zellen", "Thrombozyten"], correct: 2, level: "leicht" },
+    { question: "Was bedeutet der Begriff 'Immunsystem'?", answers: ["Das System der Hormone", "Das System zur Abwehr von Krankheitserregern", "Das Verdauungssystem", "Das Atmungssystem"], correct: 1, level: "leicht" },
+    { question: "Wofür steht die Abkürzung 'MHC'?", answers: ["Menschliches Histamin-Zentrum", "Medizinische Hormonklassifikation", "Major Histocompatibility Complex", "Makrophagen-Hemm-Komplex"], correct: 2, level: "leicht" },
+    { question: "Welche Immunzellen bilden sich im Knochenmark?", answers: ["Alle Blutzellen außer T-Zellen", "Nur Erythrozyten", "Nur Leukozyten", "Nur Plasmazellen"], correct: 0, level: "leicht" },
+    { question: "Wie nennt man die Zellen, die aus B-Zellen entstehen und Antikörper produzieren?", answers: ["T-Killerzellen", "Makrophagen", "Plasmazellen", "Dendritische Zellen"], correct: 2, level: "leicht" },
+    { question: "Was versteht man unter 'Phagozytose'?", answers: ["Blutgerinnung", "Zellteilung", "Verschlingen von Erregern durch Immunzellen", "Aufnahme von Sauerstoff"], correct: 2, level: "leicht" },
+    { question: "Welche Rolle spielt das Komplementsystem?", answers: ["Fördert die Verdauung", "Hilft bei der Wundheilung", "Unterstützt die Immunabwehr durch Proteine", "Bildet Antikörper"], correct: 2, level: "leicht" },
+    { question: "Welche Immunzellen sind an Allergien beteiligt?", answers: ["B-Zellen", "T-Zellen", "Basophile und Mastzellen", "Erythrozyten"], correct: 2, level: "leicht" },
+    { question: "Was ist ein Lymphozyt?", answers: ["Eine Hautzelle", "Eine Nervenzelle", "Eine spezielle weiße Blutzelle", "Ein Muskelprotein"], correct: 2, level: "leicht" },
+    { question: "Was ist die erste Reaktion des Körpers auf eine Infektion?", answers: ["Produktion von Antikörpern", "Erhöhung der Herzfrequenz", "Aktivierung der unspezifischen Abwehr", "Ausschüttung von Glukose"], correct: 2, level: "leicht" },
+    { question: "Was versteht man unter einer Immunreaktion vom Soforttyp?", answers: ["Späte Antikörperbildung", "Allergische Reaktion innerhalb von Minuten", "Reaktion auf Bakterien", "Gedächtnisreaktion"], correct: 1, level: "leicht" },
+    { question: "Wodurch wird eine passive Immunisierung erreicht?", answers: ["Lebendimpfstoff", "Verabreichung fertiger Antikörper", "Kontakt mit Krankheitserregern", "Autoimmunreaktion"], correct: 1, level: "leicht" },
+    { question: "Was ist eine Mastzelle?", answers: ["Ein Bakterium", "Eine Drüsenzelle", "Eine Zelle, die Histamin bei Allergien freisetzt", "Ein Zellkernbestandteil"], correct: 2, level: "leicht" },
+    { question: "Was sind Zytokine?", answers: ["Hormone des Darms", "Signalstoffe von Immunzellen", "Blutzuckerregulatoren", "Bakterielle Enzyme"], correct: 1, level: "leicht" },
+    { question: "Wie nennt man Antikörper auf der Oberfläche von B-Zellen?", answers: ["Immunglobuline", "Interleukine", "Histamine", "Komplementfaktoren"], correct: 0, level: "leicht" },
+    { question: "Wie reagieren Antikörper auf Antigene?", answers: ["Sie zerstören sie mechanisch", "Sie markieren sie für andere Immunzellen", "Sie verhindern deren Zellatmung", "Sie lösen sie in Wasser"], correct: 1, level: "leicht" },
+    { question: "Was bewirkt Histamin bei einer allergischen Reaktion?", answers: ["Fiebersenkung", "Gefäßerweiterung und Juckreiz", "Blutverdünnung", "Verlangsamte Atmung"], correct: 1, level: "leicht" },
+    { question: "Was passiert bei einer Immunreaktion vom Typ IV?", answers: ["Sofortreaktion", "Allergie auf Pollen", "Verzögerte Reaktion über T-Zellen", "Antikörper gegen Nahrungsmittel"], correct: 2, level: "leicht" },
+    { question: "Welche Zellen gehören zur adaptiven Immunabwehr?", answers: ["Neutrophile", "Basophile", "B- und T-Lymphozyten", "Erythrozyten"], correct: 2, level: "leicht" },
+    { question: "Was bedeutet der Begriff 'Immunüberwachung'?", answers: ["Messung von Antikörpern", "Erkennung und Eliminierung veränderter Zellen", "Speicherung von Nährstoffen", "Regulation des Blutdrucks"], correct: 1, level: "leicht" },
+    { question: "Was ist ein Antiserum?", answers: ["Ein Antibiotikum", "Ein Impfstoff", "Ein Serum mit Antikörpern gegen spezifische Erreger", "Ein Diagnosemittel"], correct: 2, level: "leicht" },
+    { question: "Welche Zelle aktiviert sowohl B-Zellen als auch zytotoxische T-Zellen?", answers: ["T-Helferzelle", "Makrophage", "Neutrophiler Granulozyt", "Plasmazelle"], correct: 0, level: "mittel" },
+    { question: "Was beschreibt die humorale Immunantwort am besten?", answers: ["Zellvermittelte Immunabwehr", "Produktion von Antikörpern durch Plasmazellen", "Phagozytose durch Makrophagen", "Reifung von T-Zellen im Thymus"], correct: 1, level: "mittel" },
+    { question: "Welche MHC-Klasse präsentiert Antigene an zytotoxische T-Zellen?", answers: ["MHC-I", "MHC-II", "MHC-III", "Keine der genannten"], correct: 0, level: "mittel" },
+    { question: "Welche Aufgabe haben dendritische Zellen primär?", answers: ["Produktion von Antikörpern", "Phagozytose und Antigenpräsentation", "Hormonproduktion", "Zerstörung infizierter Zellen"], correct: 1, level: "mittel" },
+    { question: "Wie wird eine Toleranz gegenüber körpereigenen Antigenen etabliert?", answers: ["Durch Bildung von Gedächtniszellen", "Durch Apoptose autoreaktiver Zellen", "Durch Antikörperbindung", "Durch Histaminfreisetzung"], correct: 1, level: "mittel" },
+    { question: "Was ist das Ziel einer sekundären Immunantwort?", answers: ["Verhinderung von Allergien", "Schnellere und stärkere Abwehr bei erneutem Kontakt", "Verhinderung von Zellteilung", "Unterdrückung des Immunsystems"], correct: 1, level: "mittel" },
+    { question: "Was versteht man unter einer Kreuzreaktion im Immunsystem?", answers: ["Reaktion auf zwei identische Antigene", "Fehlreaktion auf harmlose Strukturen", "Verwechslung von körpereigenen und fremden Antigenen", "Reaktion auf Viren und Bakterien gleichzeitig"], correct: 2, level: "mittel" },
+    { question: "Welche Zellart ist zentral für die Bekämpfung von Tumorzellen?", answers: ["Makrophagen", "B-Zellen", "Zytotoxische T-Zellen", "Plasmazellen"], correct: 2, level: "mittel" },
+    { question: "Welche Rolle spielt Interleukin-2 im Immunsystem?", answers: ["Fieberauslösung", "Aktivierung von Bakterien", "Stimulation der T-Zell-Proliferation", "Abschwächung der Immunantwort"], correct: 2, level: "mittel" },
+    { question: "Welche Antikörperklasse ist am allergischen Soforttyp beteiligt?", answers: ["IgG", "IgA", "IgE", "IgM"], correct: 2, level: "mittel" },
+    { question: "Was ist die Funktion der T-Regulatorzellen?", answers: ["Zerstörung von Viruszellen", "Antikörperproduktion", "Hemmung überschießender Immunreaktionen", "Freisetzung von Histamin"], correct: 2, level: "mittel" },
+    { question: "Was geschieht bei der somatischen Hypermutation?", answers: ["Zellvermehrung in der Milz", "Zufällige Veränderung von Antikörpergenen zur Optimierung der Affinität", "Antigenpräsentation", "Bildung von Plasmazellen"], correct: 1, level: "mittel" },
+    { question: "Was passiert im Keimzentrum eines Lymphknotens?", answers: ["Erkennung von Viren", "T-Zell-Reifung", "Proliferation und Reifung von B-Zellen", "Produktion von Interleukinen"], correct: 2, level: "mittel" },
+    { question: "Was bedeutet 'klonale Selektion'?", answers: ["Auswahl von B-Zellen mit passendem Rezeptor nach Antigenkontakt", "Zellteilung ohne Reaktion", "Mutation der T-Zellen", "Antigenunabhängige Immunantwort"], correct: 0, level: "mittel" },
+    { question: "Welche Aussage zur zellulären Immunantwort ist korrekt?", answers: ["Sie erfolgt ausschließlich durch Plasmazellen", "T-Zellen greifen infizierte Zellen direkt an", "Sie ist nicht antigen-spezifisch", "Sie beinhaltet keine Gedächtnisbildung"], correct: 1, level: "mittel" },
+    { question: "Welche Struktur wird auf der Oberfläche antigenpräsentierender Zellen gezeigt?", answers: ["Zytokine", "Komplementfaktoren", "MHC-Komplexe", "Histamine"], correct: 2, level: "mittel" },
+    { question: "Was ist die Aufgabe der natürlichen Killerzellen (NK-Zellen)?", answers: ["Produktion von Antikörpern", "Zerstörung virusinfizierter oder tumoröser Zellen ohne vorherige Sensibilisierung", "Phagozytose von Bakterien", "Histaminfreisetzung"], correct: 1, level: "mittel" },
+    { question: "Welche Phase folgt nach der Aktivierung von B-Zellen?", answers: ["Antigenbindung", "Klonale Deletion", "Differenzierung in Plasmazellen", "Verlust der MHC-Komplexe"], correct: 2, level: "mittel" },
+    { question: "Welche Moleküle sind wichtig für die Kommunikation zwischen Immunzellen?", answers: ["Antikörper", "Neurotransmitter", "Zytokine", "Myosine"], correct: 2, level: "mittel" },
+    { question: "Was geschieht bei der Antigenpräsentation?", answers: ["Die DNA des Antigens wird repliziert", "Ein Antigenfragment wird auf einem MHC-Molekül gezeigt", "Antigene werden in Mitochondrien gespeichert", "T-Zellen zerstören direkt das Antigen"], correct: 1, level: "mittel" },
+    { question: "Was ist eine Superantigen-Reaktion?", answers: ["Reaktion ohne Beteiligung von T-Zellen", "Massive T-Zell-Aktivierung unabhängig vom Antigenspezifität", "Reaktion auf Impfstoffe", "Regulierte Zytokinfreisetzung"], correct: 1, level: "mittel" },
+    { question: "Welcher Zelltyp ist MHC-unabhängig aktiv?", answers: ["Zytotoxische T-Zellen", "B-Zellen", "NK-Zellen", "Dendritische Zellen"], correct: 2, level: "mittel" },
+    { question: "Was unterscheidet aktive von passiver Immunisierung?", answers: ["Aktive Immunisierung führt zur eigenen Antikörperproduktion", "Passive dauert länger", "Passive regt das Immunsystem an", "Aktive Immunisierung enthält fertige Antikörper"], correct: 0, level: "mittel" },
+    { question: "Welche Rolle spielt der Thymus im Immunsystem?", answers: ["Ort der Phagozytose", "Ort der B-Zell-Reifung", "Ort der T-Zell-Reifung", "Ort der Antikörperbildung"], correct: 2, level: "mittel" },
+    { question: "Wie erkennt das Immunsystem körpereigene Zellen?", answers: ["Durch Antikörper", "Durch Histamin", "Durch MHC-I-Moleküle", "Durch Plasmaproteine"], correct: 2, level: "mittel" },
+    { question: "Was beschreibt 'Zytotoxizität'?", answers: ["B-Zell-Aktivierung", "Antikörperbindung", "Zellabtötung durch Immunzellen", "Antigenaufnahme"], correct: 2, level: "mittel" },
+    { question: "Welche Funktion haben Mastzellen bei einer Immunreaktion?", answers: ["Aktivierung von T-Zellen", "Freisetzung von Histamin bei Allergien", "Zytokinproduktion", "Antigenpräsentation"], correct: 1, level: "mittel" },
+    { question: "Welche Phase der Immunantwort erfolgt zuerst?", answers: ["Gedächtnisbildung", "Antikörperausschüttung", "Antigenerkennung", "Zellteilung"], correct: 2, level: "mittel" },
+    { question: "Wodurch entsteht Immuntoleranz?", answers: ["Verstärkte T-Zell-Aktivierung", "Elimination autoreaktiver Lymphozyten", "Vermehrte Antikörperproduktion", "Zerstörung von Antigenen"], correct: 1, level: "mittel" },
+    { question: "Was ist das Ziel der Antigenvariation bei Erregern?", answers: ["Erhöhung der Erregergröße", "Umgehung der Immunantwort", "Zellzerstörung", "Antikörperproduktion"], correct: 1, level: "mittel" },
+    { question: "Welche Funktion haben Toll-like-Rezeptoren (TLRs)?", answers: ["Erkennung von körpereigenen Antigenen", "Beteiligung an der Zellatmung", "Erkennung von Pathogen-assoziierten Mustern", "Antikörperbindung"], correct: 2, level: "mittel" },
+    { question: "Was beschreibt den Begriff 'Antigenpräsentation' korrekt?", answers: ["Freisetzung von Antikörpern", "Darstellung von Antigenfragmenten auf Zelloberflächen", "Phagozytose von Antikörpern", "Bildung von Zytokinen"], correct: 1, level: "mittel" },
+    { question: "Welche Funktion hat das lymphatische System?", answers: ["Blutzuckersenkung", "Nährstoffaufnahme", "Transport von Immunzellen und Flüssigkeit", "O2-Transport"], correct: 2, level: "mittel" },
+    { question: "Wodurch unterscheiden sich primäre von sekundären lymphatischen Organen?", answers: ["Nur primäre enthalten Antikörper", "Sekundäre sind für Reifung zuständig", "Primäre sind Ort der Zellreifung, sekundäre Ort der Aktivierung", "Sekundäre sind aktiv nur bei Allergien"], correct: 2, level: "mittel" },
+    { question: "Welche Reaktion beschreibt eine Typ-I-Überempfindlichkeit?", answers: ["Autoimmunreaktion", "Sofortreaktion durch IgE-vermittelte Histaminfreisetzung", "Zellvermittelte Reaktion", "Reaktion durch Immunkomplexe"], correct: 1, level: "mittel" },
+    { question: "Was ist ein Epitop?", answers: ["Ein Antikörper", "Ein Teil des Antigens, das vom Immunsystem erkannt wird", "Ein Rezeptor auf der T-Zelle", "Ein Virusprotein"], correct: 1, level: "mittel" },
+    { question: "Welche Zellen exprimieren MHC-Klasse-II-Moleküle?", answers: ["Alle Körperzellen", "Nur Erythrozyten", "Professionelle antigenpräsentierende Zellen", "Tumorzellen"], correct: 2, level: "mittel" },
+    { question: "Welche Aussage zu B-Zellen ist korrekt?", answers: ["Sie reifen im Thymus", "Sie sind ausschließlich Teil der unspezifischen Immunantwort", "Sie produzieren Antikörper nach Aktivierung", "Sie zerstören direkt infizierte Zellen"], correct: 2, level: "mittel" },
+    { question: "Was ist ein Hapten?", answers: ["Ein vollständiges Antigen", "Ein Antikörperfragment", "Ein kleines Molekül, das erst in Verbindung mit einem Trägerprotein immunogen wird", "Ein Virusbestandteil"], correct: 2, level: "mittel" },
+    { question: "Welche Immunzellen eliminieren bevorzugt virusinfizierte Zellen?", answers: ["B-Zellen", "T-Helferzellen", "Zytotoxische T-Zellen", "Makrophagen"], correct: 2, level: "mittel" },
+    { question: "Welche Rolle spielt Interleukin-1 (IL-1)?", answers: ["Fördert Zellatmung", "Aktiviert B-Zellen", "Verursacht Fieber und Entzündung", "Steigert Sauerstoffaufnahme"], correct: 2, level: "mittel" },
+    { question: "Wie entsteht immunologisches Gedächtnis?", answers: ["Durch ständige Produktion von Antigenen", "Durch Gedächtnis-T- und -B-Zellen nach Erstkontakt", "Durch Zerstörung von Antikörpern", "Durch Histaminbindung"], correct: 1, level: "mittel" },
+    { question: "Was ist die Folge eines Defekts in der T-Zell-Reifung?", answers: ["Hyperaktivität des Immunsystems", "Fehlende Antikörper", "Störung der zellulären Immunantwort", "Zunahme der Erythrozytenproduktion"], correct: 2, level: "mittel" },
+    { question: "Welche Funktion haben Plasmazellen?", answers: ["Antigenpräsentation", "Histaminfreisetzung", "Produktion spezifischer Antikörper", "Abtöten von Bakterien durch Phagozytose"], correct: 2, level: "mittel" },
+    { question: "Was ist die Hauptaufgabe von Interleukin-4?", answers: ["Fördert Th1-Zellantwort", "Fördert B-Zell-Differenzierung und IgE-Produktion", "Hemmt Mastzellaktivierung", "Reduziert Fieber"], correct: 1, level: "mittel" },
+    { question: "Was ist ein Antigen-Antikörper-Komplex?", answers: ["Ein Rezeptor", "Ein Transportprotein", "Ein gebundener Zustand zwischen Antigen und Antikörper", "Ein Zellorganell"], correct: 2, level: "mittel" },
+    { question: "Welche Aussage zu NK-Zellen ist korrekt?", answers: ["Sie benötigen Antigenkontakt", "Sie reagieren spezifisch auf Antigene", "Sie töten Zellen ohne vorherige Sensibilisierung", "Sie produzieren Immunglobuline"], correct: 2, level: "mittel" },
+    { question: "Welche Zellen präsentieren Antigene an naive T-Zellen?", answers: ["Plasmazellen", "Dendritische Zellen", "Erythrozyten", "Thrombozyten"], correct: 1, level: "mittel" },
+    { question: "Welche Aufgabe hat das Komplementsystem nicht?", answers: ["Markierung von Erregern", "Direkte Lyse von Pathogenen", "Antikörperbildung", "Anlockung von Immunzellen"], correct: 2, level: "mittel" },
+    { question: "Welche Funktion hat IgA?", answers: ["Hauptantikörper im Blut", "Beteiligung an allergischen Reaktionen", "Schutz von Schleimhäuten", "Funktion nur im fetalen Kreislauf"], correct: 2, level: "mittel" },
+    { question: "Was beschreibt die zentrale Toleranz?", answers: ["Regulation durch Histamin", "Zerstörung reifer B-Zellen", "Eliminierung autoreaktiver Lymphozyten in primären lymphatischen Organen", "Aktivierung durch dendritische Zellen"], correct: 2, level: "mittel" },
+    { question: "Welche Rolle spielt Interferon-??", answers: ["Fördert die humorale Immunantwort", "Aktiviert Makrophagen und Th1-Zellen", "Hemmt die T-Zell-Aktivierung", "Fördert Mastzellen"], correct: 1, level: "mittel" },
+    { question: "Wie funktioniert ein Impfstoff auf RNA-Basis?", answers: ["Er enthält fertige Antikörper", "Er zerstört Bakterien direkt", "Er liefert genetische Information zur Antigenbildung", "Er aktiviert Histaminfreisetzung"], correct: 2, level: "mittel" },
+    { question: "Was ist die Folge der Aktivierung von Komplement C5?", answers: ["Histaminfreisetzung", "Zytokinunterdrückung", "Bildung des Membranangriffskomplexes", "Abbau von Immunglobulin A"], correct: 2, level: "mittel" },
+    { question: "Wie entsteht die Diversität von Antikörpern?", answers: ["Durch Kontakt mit vielen Erregern", "Durch somatische Rekombination der Genabschnitte", "Durch Translation im Golgi", "Durch Apoptose"], correct: 1, level: "mittel" },
+    { question: "Was ist ein Antikörper-Isotyp?", answers: ["Ein Antikörperbruchstück", "Ein alternativer Name für MHC", "Ein bestimmter Antikörpertyp (z.?B. IgG, IgM)", "Ein fremdes Epitop"], correct: 2, level: "mittel" },
+    { question: "Welche Aufgabe hat das CD4-Molekül auf T-Helferzellen?", answers: ["Bindung an MHC-I", "Erkennung von Pathogenen", "Bindung an MHC-II", "Signalübertragung zur Plasmazelle"], correct: 2, level: "mittel" },
+    { question: "Welche Reaktion beschreibt eine Typ-III-Überempfindlichkeit?", answers: ["Sofortreaktion", "Immunkomplex-vermittelte Entzündung", "Zellvermittelte Immunantwort", "Kontaktdermatitis"], correct: 1, level: "mittel" },
+    { question: "Was bedeutet 'klonale Expansion'?", answers: ["Mutation von T-Zellen", "Vermehrung aktivierter Lymphozyten", "Apoptose bei Erregerkontakt", "Antigenbindung durch Antikörper"], correct: 1, level: "mittel" },
+    { question: "Was ist das Ziel einer Booster-Impfung?", answers: ["Allergievermeidung", "Blutdrucksenkung", "Erneute Stimulation des Immungedächtnisses", "Verlangsamung der Immunantwort"], correct: 2, level: "mittel" },
+    { question: "Was beschreibt die Affinitätsreifung von B-Zellen korrekt?", answers: ["Klonale Expansion aller B-Zellen", "Reifung durch MHC-I-Erkennung", "Somatische Hypermutation zur Erhöhung der Antigenbindung", "Verlust von Antikörpervielfalt"], correct: 2, level: "schwer" },
+    { question: "Welche Eigenschaft trifft auf regulatorische T-Zellen (Tregs) zu?", answers: ["Sie zerstören Antikörper", "Sie unterdrücken überschießende Immunreaktionen", "Sie produzieren IgE", "Sie aktivieren Mastzellen"], correct: 1, level: "schwer" },
+    { question: "Welcher Signalweg ist zentral für die Aktivierung von T-Zellen nach TCR-Bindung?", answers: ["JAK-STAT", "NF-?B", "PI3K-Akt", "MAPK"], correct: 1, level: "schwer" },
+    { question: "Welche Zytokine fördern die Differenzierung von naiven T-Zellen zu Th17-Zellen?", answers: ["IL-2 und IFN-?", "IL-4 und IL-5", "IL-6 und TGF-?", "IL-10 und TNF-?"], correct: 2, level: "schwer" },
+    { question: "Wie unterscheiden sich zentrale und periphere Toleranz?", answers: ["Beide wirken ausschließlich im Thymus", "Zentrale verhindert Autoimmunität, periphere reagiert auf Pathogene", "Zentrale erfolgt im Knochenmark, periphere im Blut", "Zentrale Toleranz erfolgt in primären, periphere in sekundären lymphatischen Organen"], correct: 3, level: "schwer" },
+    { question: "Welche Eigenschaft besitzt ein Superantigen?", answers: ["Es bindet TCR und MHC unabhängig vom Antigenspezifität", "Es stimuliert B-Zellen direkt", "Es verhindert MHC-Expression", "Es ist spezifisch für IgE"], correct: 0, level: "schwer" },
+    { question: "Welche Zellen exprimieren CD8?", answers: ["T-Helferzellen", "B-Zellen", "Zytotoxische T-Zellen", "NK-Zellen"], correct: 2, level: "schwer" },
+    { question: "Welche Bedeutung hat die ?2-Mikroglobulin-Untereinheit?", answers: ["Strukturkomponente von IgE", "Bestandteil von MHC-II", "Stabilisierung von MHC-I-Molekülen", "Aktivator der dendritischen Zellen"], correct: 2, level: "schwer" },
+    { question: "Welche Immunzellen können als professionelle antigenpräsentierende Zellen (APCs) fungieren?", answers: ["NK-Zellen", "Plasmazellen", "Dendritische Zellen, Makrophagen, B-Zellen", "Erythrozyten"], correct: 2, level: "schwer" },
+    { question: "Was beschreibt den Begriff 'Cross-Presentation'?", answers: ["Antigenübertragung zwischen Plasmazellen", "MHC-II Präsentation durch zytotoxische T-Zellen", "Exogene Antigene werden auf MHC-I präsentiert", "Migration von T-Zellen in Lymphknoten"], correct: 2, level: "schwer" },
+    { question: "Was ist die Funktion von AIRE (autoimmune regulator)?", answers: ["Fördert MHC-I-Bindung", "Reguliert Antikörperproduktion", "Ermöglicht zentrale Toleranz durch Präsentation peripherer Antigene im Thymus", "Stimuliert Interleukin-10"], correct: 2, level: "schwer" },
+    { question: "Welcher Vorgang ermöglicht die Diversität des T-Zell-Rezeptors (TCR)?", answers: ["RNA-Editing", "V(D)J-Rekombination", "Polysomale Translation", "Alternatives Spleißen"], correct: 1, level: "schwer" },
+    { question: "Was ist die Konsequenz einer defekten Fas-FasL-Interaktion?", answers: ["Verstärkte Phagozytose", "Verlust des immunologischen Gedächtnisses", "Fehlende Apoptose autoreaktiver Zellen", "Erhöhte Antikörperproduktion"], correct: 2, level: "schwer" },
+    { question: "Welche Immunzellen exprimieren das Transkriptionsfaktor FOXP3?", answers: ["Th1-Zellen", "Th2-Zellen", "Tregs", "Th17-Zellen"], correct: 2, level: "schwer" },
+    { question: "Welche Immunglobulin-Klasse ist plazentagängig?", answers: ["IgA", "IgE", "IgG", "IgM"], correct: 2, level: "schwer" },
+    { question: "Was ist die Folge einer C3-Komplementdefizienz?", answers: ["Hypergammaglobulinämie", "Fehlende Zytokinproduktion", "Anfälligkeit für bakterielle Infektionen durch gestörte Opsonierung", "Autoimmunreaktionen gegen Plasmazellen"], correct: 2, level: "schwer" },
+    { question: "Welche MHC-Moleküle präsentieren Antigene, die von intrazellulären Erregern stammen?", answers: ["MHC-II", "CD40", "MHC-I", "CD28"], correct: 2, level: "schwer" },
+    { question: "Was ist 'linked recognition' bei der T-Zell-B-Zell-Interaktion?", answers: ["T-Zelle erkennt exakt dieselbe Epitope wie B-Zelle", "T-Zelle erkennt ein Antigen, das mit dem von der B-Zelle präsentierten assoziiert ist", "Erkennung von Lektinen durch beide Zellen", "Bindung von Histamin an MHC-II"], correct: 1, level: "schwer" },
+    { question: "Welche Antikörperklasse hat die höchste Multimerstruktur?", answers: ["IgG", "IgA", "IgM", "IgE"], correct: 2, level: "schwer" },
+    { question: "Welche Bedeutung hat CD40 auf B-Zellen?", answers: ["Signaltransduktion zur Antikörperklassenwechsel", "Antigenpräsentation auf MHC-III", "Erkennung von Interferonen", "Apoptoseinduktion"], correct: 0, level: "schwer" },
+    { question: "Welche Aussage zur isotypischen Klassenwechselrekombination (CSR) ist korrekt?", answers: ["Erfordert AID (activation-induced cytidine deaminase)", "Ist unabhängig von T-Hilfe", "Führt zur Erzeugung neuer TCRs", "Wird durch NK-Zellen vermittelt"], correct: 0, level: "schwer" },
+    { question: "Welche Konsequenz hat eine defekte RAG1/RAG2-Funktion?", answers: ["Unfähigkeit zur MHC-Erkennung", "Fehlende Phagozytose", "Blockade der V(D)J-Rekombination und Lymphozytenentwicklung", "Überproduktion von IgG"], correct: 2, level: "schwer" },
+    { question: "Welche Struktur stabilisiert das immunologische Synapse zwischen APC und T-Zelle?", answers: ["CD4", "CD3", "LFA-1/ICAM-1", "TCR"], correct: 2, level: "schwer" },
+    { question: "Was bedeutet 'epitope spreading' bei Autoimmunerkrankungen?", answers: ["Verlust von MHC-Spezifität", "Immunantwort weitet sich auf neue Epitope aus", "Bindung von IgE an Tumorzellen", "Zerstörung von Mastzellen"], correct: 1, level: "schwer" },
+    { question: "Was beschreibt die Funktion von CTLA-4?", answers: ["Aktiviert naive T-Zellen", "Stimuliert Plasmazellen", "Hemmt T-Zell-Aktivierung durch kompetitive Bindung an CD80/CD86", "Bindet freie Antigene"], correct: 2, level: "schwer" },
+    { question: "Welche Mechanismen verhindert Autoimmunität im Thymus?", answers: ["Antigenvariation", "AIRE-abhängige Negativselektion", "Makrophageninduktion", "Histaminfreisetzung"], correct: 1, level: "schwer" },
+    { question: "Welche Immunzellen exprimieren invariant NK-T-Zellrezeptoren?", answers: ["Th1-Zellen", "NK-Zellen", "iNKT-Zellen", "??-T-Zellen"], correct: 2, level: "schwer" },
+    { question: "Was bewirkt IL-10 primär?", answers: ["Fördert Entzündung", "Hemmt Immunantwort durch Suppression von Makrophagen und Th1-Zellen", "Aktiviert Dendriten", "Verstärkt IgE-Produktion"], correct: 1, level: "schwer" },
+    { question: "Welche Zellen sind maßgeblich an der Bildung des Keimzentrums im Lymphfollikel beteiligt?", answers: ["Tregs und NK-Zellen", "Follikuläre dendritische Zellen und B-Zellen", "Mastzellen", "??-T-Zellen"], correct: 1, level: "schwer" },
+    { question: "Welche Bedeutung hat die somatische Hypermutation?", answers: ["Erzeugung identischer TCRs", "Zufällige Punktmutationen zur Erhöhung der Antikörper-Affinität", "Verhinderung von Autoimmunität", "Abbau von IgA"], correct: 1, level: "schwer" }
+];
+    let questions = [];
+    let used = [];
+    let correctCount = 0;
+    let askedCount = 0;
+
+    function startQuiz(selectedLevel) {
+      questions = allQuestions.filter(q => q.level === selectedLevel);
+      document.getElementById('level-auswahl').style.display = 'none';
+      document.getElementById('frage').style.display = 'block';
+      document.getElementById('antworten').style.display = 'flex';
+      showNext();
+    }
+
+    function getRandomIndex() {
+      if (used.length === questions.length) used = [];
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * questions.length);
+      } while (used.includes(idx));
+      used.push(idx);
+      return idx;
+    }
+
+    function showNext() {
+      if (askedCount >= questions.length) {
+        showResult();
+        return;
+      }
+      askedCount++;
+      const idx = getRandomIndex();
+      const q = questions[idx];
+      document.getElementById('frage').textContent = q.question;
+      const container = document.getElementById('antworten');
+      container.innerHTML = '';
+      q.answers.forEach((ans, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = ans;
+btn.onclick = () => {
+  if (i === q.correct) {
+    btn.classList.add('correct');
+    correctCount++;
+  } else {
+    btn.classList.add('wrong');
+    wrongAnswers.push({
+      question: q.question,
+      selected: q.answers[i],
+      correct: q.answers[q.correct]
+    });
+
+    setTimeout(() => {
+      Array.from(container.children)[q.correct].classList.add('correct');
+    }, 100);
+  }
+  setTimeout(showNext, 1000);
+};
+        container.appendChild(btn);
+      });
+    }
+
+function showResult() {
+  document.getElementById('frage').style.display = 'none';
+  document.getElementById('antworten').style.display = 'none';
+  const percent = Math.round((correctCount / askedCount) * 100);
+  const ergebnisDiv = document.getElementById('ergebnis');
+
+  let resultText = `Du hast ${correctCount} von ${askedCount} richtig (${percent}%)`;
+
+  if (wrongAnswers.length > 0) {
+    resultText += "<br><br><strong>Falsch beantwortete Fragen:</strong><ul>";
+    wrongAnswers.forEach(item => {
+      resultText += `<li><strong>Frage:</strong> ${item.question}<br>
+                     <strong>Deine Antwort:</strong> ${item.selected}<br>
+                     <strong>Richtige Antwort:</strong> ${item.correct}</li><br>`;
+    });
+    resultText += "</ul>";
+  }
+
+  ergebnisDiv.innerHTML = resultText;
+  ergebnisDiv.style.display = 'block';
+  document.getElementById('navigation').style.display = 'flex';
+}
+
+    function restart() {
+      used = [];
+      correctCount = 0;
+      askedCount = 0;
+      wrongAnswers = [];
+      document.getElementById('ergebnis').style.display = 'none';
+      document.getElementById('navigation').style.display = 'none';
+      startQuiz(questions[0].level); // Restart with the same level
+    }
+
+    function Levels() {
+      used = [];
+      correctCount = 0;
+      askedCount = 0;
+      wrongAnswers = [];
+      document.getElementById('frage').style.display = 'none';
+      document.getElementById('antworten').style.display = 'none';
+      document.getElementById('ergebnis').style.display = 'none';
+      document.getElementById('navigation').style.display = 'none';
+      document.getElementById('level-auswahl').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
